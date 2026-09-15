@@ -4940,14 +4940,26 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 		if (!returnsTask)
 			WriteError("Async functions must return FTask or TTask<T>", file, node);
 
-		for (asUINT parameterIndex = 0; parameterIndex < parameterTypes.GetLength(); ++parameterIndex)
+		asCScriptNode* parameterListNode = node->firstChild;
+		while (parameterListNode != nullptr && parameterListNode->nodeType != snParameterList)
+			parameterListNode = parameterListNode->next;
+		bool hasExplicitReferenceParameter = false;
+		if (parameterListNode != nullptr)
 		{
-			if (parameterTypes[parameterIndex].IsReference())
+			for (asCScriptNode* parameterNode = parameterListNode->firstChild;
+				parameterNode != nullptr; parameterNode = parameterNode->next)
 			{
-				WriteError("Async functions cannot have in, out, or reference parameters", file, node);
-				break;
+				if (parameterNode->nodeType == snDataType
+					&& parameterNode->firstChild != nullptr
+					&& parameterNode->firstChild->tokenType == ttAmp)
+				{
+					hasExplicitReferenceParameter = true;
+					break;
+				}
 			}
 		}
+		if (hasExplicitReferenceParameter)
+			WriteError("Async functions cannot have in, out, or reference parameters", file, node);
 	}
 	//@CYANCOOK(AngelScript Async Await) END
 
