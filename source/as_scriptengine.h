@@ -528,6 +528,7 @@ public:
 		bool   floatIsFloat64;
 		bool   warnOnFloatConstantsForDoubles;
 		bool   warnIntegerDivision;
+		bool   enableAsyncAwait;
 	} ep;
 
 	// Callbacks

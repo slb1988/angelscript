@@ -154,6 +154,8 @@ enum asEEngineProp
 	asEP_WARN_ON_FLOAT_CONSTANTS_FOR_DOUBLES  = 33,
 	asEP_WARN_INTEGER_DIVISION  = 34,
 	asEP_RETURN_LINE_INFO            = 35,
+	// 36-47 are reserved for properties introduced by upstream 2.38.
+	asEP_ENABLE_ASYNC_AWAIT          = 48,
 
 	asEP_LAST_PROPERTY
 };

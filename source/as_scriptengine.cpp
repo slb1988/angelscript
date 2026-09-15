@@ -481,6 +481,10 @@ int asCScriptEngine::SetEngineProperty(asEEngineProp property, asPWORD value)
 		ep.warnIntegerDivision = value ? true : false;
 		break;
 
+	case asEP_ENABLE_ASYNC_AWAIT:
+		ep.enableAsyncAwait = value ? true : false;
+		break;
+
 	default:
 		return asINVALID_ARG;
 	}
@@ -595,6 +599,9 @@ asPWORD asCScriptEngine::GetEngineProperty(asEEngineProp property) const
 	case asEP_WARN_INTEGER_DIVISION:
 		return ep.warnIntegerDivision;
 
+	case asEP_ENABLE_ASYNC_AWAIT:
+		return ep.enableAsyncAwait;
+
 	default:
 		return 0;
 	}
@@ -662,6 +669,7 @@ asCScriptEngine::asCScriptEngine()
 		ep.allowDoubleType       = false;
 		ep.warnOnFloatConstantsForDoubles       = false;
 		ep.warnIntegerDivision       = true;
+		ep.enableAsyncAwait          = false;
 		ep.maxNestedCalls                = 100;
 		ep.genericCallMode               = 1;         // 0 = old (pre 2.33.0) behavior where generic ignored auto handles, 1 = treat handles like in native call
 	}
