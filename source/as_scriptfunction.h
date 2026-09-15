@@ -126,6 +126,10 @@ enum asEFuncTrait
 	asTRAIT_UNSAFE_DURING_CONSTRUCTION = 0x1000000,
 	asTRAIT_INSTANTIATED_TEMPLATE_FUNCTION = 0x2000000,
 	asTRAIT_DEFAULTS_ONLY = 0x4000000,
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	// 0x08000000-0x20000000 are reserved for official 2.38 method traits.
+	asTRAIT_ASYNC_RESUME_ENTRY = 0x40000000,
+	//@CYANCOOK(AngelScript Async Await) END
 };
 
 enum class asECompileOutType
