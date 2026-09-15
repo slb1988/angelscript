@@ -66,7 +66,9 @@ public:
 	int ParseScript(asCScriptCode *script);
 
 	// Called from compiler
-	int ParseStatementBlock(asCScriptCode *script, asCScriptNode *block);
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	int ParseStatementBlock(asCScriptCode *script, asCScriptNode *block, bool isAsyncFunction = false);
+	//@CYANCOOK(AngelScript Async Await) END
 	int ParseStatement(asCScriptCode *script, asCScriptNode *block);
 	int ParseVarInit(asCScriptCode *script, asCScriptNode *init);
 	int ParseExpression(asCScriptCode *script);
@@ -146,6 +148,9 @@ protected:
 	bool IsVarDecl();
 	bool IsVirtualPropertyDecl();
 	bool IsFuncDecl(bool isMethod);
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	bool IsAsyncFunctionModifier();
+	//@CYANCOOK(AngelScript Async Await) END
 	bool IsLambda();
 	bool IsFunctionCall();
 
@@ -197,6 +202,9 @@ protected:
 	bool isSyntaxError;
 	bool checkValidTypes;
 	bool isParsingAppInterface;
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	bool isParsingAsyncFunction;
+	//@CYANCOOK(AngelScript Async Await) END
 
 	asCScriptEngine *engine;
 	asCBuilder      *builder;

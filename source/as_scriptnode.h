@@ -97,6 +97,10 @@ enum eScriptNode
 	snClassDefaultStatement,
 	snFallthrough,
 	snForRange,
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	snAsync,
+	snAwait,
+	//@CYANCOOK(AngelScript Async Await) END
 };
 
 struct sToken

@@ -4636,6 +4636,15 @@ void asCBuilder::GetParsedFunctionDetails(asCScriptNode *node, asCScriptCode *fi
 		node = node->next;
 	}
 
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	funcTraits.SetTrait(asTRAIT_ASYNC, false);
+	if (node->nodeType == snAsync)
+	{
+		funcTraits.SetTrait(asTRAIT_ASYNC, true);
+		node = node->next;
+	}
+	//@CYANCOOK(AngelScript Async Await) END
+
 	// Find the name
 	funcTraits.SetTrait(asTRAIT_CONSTRUCTOR, false);
 	funcTraits.SetTrait(asTRAIT_DESTRUCTOR, false);
@@ -4680,7 +4689,9 @@ void asCBuilder::GetParsedFunctionDetails(asCScriptNode *node, asCScriptCode *fi
 	funcTraits.SetTrait(asTRAIT_FINAL, false);
 	funcTraits.SetTrait(asTRAIT_OVERRIDE, false);
 	funcTraits.SetTrait(asTRAIT_PROPERTY, false);
-	funcTraits.SetTrait(asTRAIT_NODISCARD, false);
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	funcTraits.SetTrait(asTRAIT_NODISCARD, funcTraits.GetTrait(asTRAIT_ASYNC));
+	//@CYANCOOK(AngelScript Async Await) END
 	funcTraits.SetTrait(asTRAIT_ALLOWDISCARD, false);
 
 	if( n->next->next )

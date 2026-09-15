@@ -342,6 +342,10 @@ const char * const GENERATED_FUNCTION_TOKEN     = "__generated";
 const char * const DEPRECATED_TOKEN     = "deprecated";
 const char * const UNSAFE_DURING_CONSTRUCTION_TOKEN     = "unsafe_during_construction";
 const char * const DEFAULTS_TOKEN     = "defaults";
+//@CYANCOOK(AngelScript Async Await) BEGIN
+const char * const ASYNC_TOKEN = "async";
+const char * const AWAIT_TOKEN = "await";
+//@CYANCOOK(AngelScript Async Await) END
 
 END_AS_NAMESPACE
 

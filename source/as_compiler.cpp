@@ -1139,7 +1139,10 @@ int asCCompiler::CompileFunction(asCBuilder *in_builder, asCScriptCode *in_scrip
 	if (blockBegin != nullptr)
 	{
 		asCParser parser(builder);
-		int r = parser.ParseStatementBlock(script, blockBegin);
+		//@CYANCOOK(AngelScript Async Await) BEGIN
+		int r = parser.ParseStatementBlock(
+			script, blockBegin, in_outFunc->traits.GetTrait(asTRAIT_ASYNC));
+		//@CYANCOOK(AngelScript Async Await) END
 		if (r < 0) return -1;
 		asCScriptNode* block = parser.GetScriptNode();
 

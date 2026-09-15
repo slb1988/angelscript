@@ -70,6 +70,9 @@ asCParser::asCParser(asCBuilder *builder)
 	scriptNode            = 0;
 	checkValidTypes       = false;
 	isParsingAppInterface = false;
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	isParsingAsyncFunction = false;
+	//@CYANCOOK(AngelScript Async Await) END
 }
 
 asCParser::~asCParser()
@@ -83,6 +86,9 @@ void asCParser::Reset()
 	isSyntaxError         = false;
 	checkValidTypes       = false;
 	isParsingAppInterface = false;
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	isParsingAsyncFunction = false;
+	//@CYANCOOK(AngelScript Async Await) END
 
 	sourcePos = 0;
 	scriptNode = 0;
@@ -2102,6 +2108,16 @@ asCScriptNode *asCParser::ParseExprTerm()
 	{
 		GetToken(&t);
 		RewindTo(&t);
+		//@CYANCOOK(AngelScript Async Await) BEGIN
+		if (engine->ep.enableAsyncAwait && isParsingAsyncFunction
+			&& IdentifierIs(t, AWAIT_TOKEN))
+		{
+			asCScriptNode* awaitNode = ParseIdentifier();
+			awaitNode->nodeType = snAwait;
+			node->AddChildLast(awaitNode);
+			continue;
+		}
+		//@CYANCOOK(AngelScript Async Await) END
 		if( !IsPreOperator(t.type) )
 			break;
 
@@ -2484,6 +2500,10 @@ asCScriptNode *asCParser::ParseScript(bool inBlock)
 				node->AddChildLast(ParseFuncDef());
 			else if( t1.type == ttLocal )
 				node->AddChildLast(ParseLocal());
+			//@CYANCOOK(AngelScript Async Await) BEGIN
+			else if (IsAsyncFunctionModifier())
+				node->AddChildLast(ParseFunction());
+			//@CYANCOOK(AngelScript Async Await) END
 			else if( t1.type == ttConst || t1.type == ttScope || t1.type == ttAuto || IsDataType(t1) )
 			{
 				if( IsVirtualPropertyDecl() )
@@ -2609,11 +2629,17 @@ asCScriptNode *asCParser::ParseNamespace()
 	return node;
 }
 
-int asCParser::ParseStatementBlock(asCScriptCode *in_script, asCScriptNode *in_block)
+//@CYANCOOK(AngelScript Async Await) BEGIN
+int asCParser::ParseStatementBlock(
+	asCScriptCode *in_script, asCScriptNode *in_block, bool in_isAsyncFunction)
+//@CYANCOOK(AngelScript Async Await) END
 {
 	TimeIt("asCParser::ParseStatementBlock");
 
 	Reset();
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	isParsingAsyncFunction = in_isAsyncFunction;
+	//@CYANCOOK(AngelScript Async Await) END
 
 	// Tell the parser to validate the identifiers as valid types
 	checkValidTypes = true;
@@ -3136,6 +3162,39 @@ bool asCParser::IsVirtualPropertyDecl()
 	return false;
 }
 
+//@CYANCOOK(AngelScript Async Await) BEGIN
+bool asCParser::IsAsyncFunctionModifier()
+{
+	if (!engine->ep.enableAsyncAwait)
+		return false;
+
+	sToken asyncToken;
+	GetToken(&asyncToken);
+	if (!IdentifierIs(asyncToken, ASYNC_TOKEN))
+	{
+		RewindTo(&asyncToken);
+		return false;
+	}
+
+	sToken afterType;
+	if (!IsType(afterType))
+	{
+		RewindTo(&asyncToken);
+		return false;
+	}
+
+	RewindTo(&afterType);
+	sToken functionName;
+	GetToken(&functionName);
+	sToken openParenthesis;
+	GetToken(&openParenthesis);
+	const bool isAsyncFunction = functionName.type == ttIdentifier
+		&& openParenthesis.type == ttOpenParanthesis;
+	RewindTo(&asyncToken);
+	return isAsyncFunction;
+}
+//@CYANCOOK(AngelScript Async Await) END
+
 bool asCParser::IsFuncDecl(bool isMethod)
 {
 	// Set start point so that we can rewind
@@ -3172,6 +3231,13 @@ bool asCParser::IsFuncDecl(bool isMethod)
 		else if( t1.type != ttPrivate && t1.type != ttProtected )
 			RewindTo(&t1);
 
+		//@CYANCOOK(AngelScript Async Await) BEGIN
+		if (IsAsyncFunctionModifier())
+		{
+			GetToken(&t1);
+		}
+		//@CYANCOOK(AngelScript Async Await) END
+
 		// A class constructor starts with identifier followed by parenthesis
 		// A class destructor starts with the ~ token
 		GetToken(&t1);
@@ -3183,6 +3249,14 @@ bool asCParser::IsFuncDecl(bool isMethod)
 			return true;
 		}
 	}
+
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	if (IsAsyncFunctionModifier())
+	{
+		sToken asyncToken;
+		GetToken(&asyncToken);
+	}
+	//@CYANCOOK(AngelScript Async Await) END
 
 	// A function decl starts with a type
 	sToken t1;
@@ -3394,6 +3468,21 @@ asCScriptNode *asCParser::ParseFunction(bool isMethod)
 			GetToken(&t1);
 		}
 	}
+
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	RewindTo(&t1);
+	if (IsAsyncFunctionModifier())
+	{
+		asCScriptNode* asyncNode = ParseIdentifier();
+		asyncNode->nodeType = snAsync;
+		node->AddChildLast(asyncNode);
+		GetToken(&t1);
+	}
+	else
+	{
+		GetToken(&t1);
+	}
+	//@CYANCOOK(AngelScript Async Await) END
 
 	if( isSyntaxError ) return node;
 

@@ -97,7 +97,9 @@ enum asEObjVarInfoOption
 	asBLOCK_END
 };
 
-enum asEFuncTrait
+//@CYANCOOK(AngelScript Async Await) BEGIN
+enum asEFuncTrait : asDWORD
+//@CYANCOOK(AngelScript Async Await) END
 {
 	asTRAIT_CONSTRUCTOR = 0x1,
 	asTRAIT_DESTRUCTOR  = 0x2,
@@ -129,6 +131,7 @@ enum asEFuncTrait
 	//@CYANCOOK(AngelScript Async Await) BEGIN
 	// 0x08000000-0x20000000 are reserved for official 2.38 method traits.
 	asTRAIT_ASYNC_RESUME_ENTRY = 0x40000000,
+	asTRAIT_ASYNC = 0x80000000u,
 	//@CYANCOOK(AngelScript Async Await) END
 };
 
