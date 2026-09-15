@@ -11292,6 +11292,30 @@ int asCCompiler::CompileExpressionTerm(asCScriptNode *node, asCExprContext *ctx,
 	pnode = vnode->prev;
 	while( pnode )
 	{
+		//@CYANCOOK(AngelScript Async Await) BEGIN
+		if (pnode->nodeType == snAwait)
+		{
+			if (!outFunc->traits.GetTrait(asTRAIT_ASYNC))
+			{
+				Error("await expressions are only valid inside async functions", pnode);
+				return -1;
+			}
+
+			asCTypeInfo* awaitedType = v.type.dataType.GetTypeInfo();
+			const bool isTask = awaitedType != nullptr
+				&& (awaitedType->name == "FTask"
+					|| awaitedType->name == "TTask"
+					|| awaitedType->name.StartsWith("TTask<"));
+			if (!isTask)
+			{
+				Error("await operand must be FTask or TTask<T>", pnode);
+				return -1;
+			}
+
+			Error("Async function reached bytecode compilation before state-machine lowering", pnode);
+			return -1;
+		}
+		//@CYANCOOK(AngelScript Async Await) END
 		r = CompileExpressionPreOp(pnode, &v, bIsStatementRoot); if( r < 0 ) return r;
 		pnode = pnode->prev;
 	}

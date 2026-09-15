@@ -2109,8 +2109,7 @@ asCScriptNode *asCParser::ParseExprTerm()
 		GetToken(&t);
 		RewindTo(&t);
 		//@CYANCOOK(AngelScript Async Await) BEGIN
-		if (engine->ep.enableAsyncAwait && isParsingAsyncFunction
-			&& IdentifierIs(t, AWAIT_TOKEN))
+		if (IsAwaitExpression())
 		{
 			asCScriptNode* awaitNode = ParseIdentifier();
 			awaitNode->nodeType = snAwait;
@@ -3192,6 +3191,36 @@ bool asCParser::IsAsyncFunctionModifier()
 		&& openParenthesis.type == ttOpenParanthesis;
 	RewindTo(&asyncToken);
 	return isAsyncFunction;
+}
+
+bool asCParser::IsAwaitExpression()
+{
+	if (!engine->ep.enableAsyncAwait)
+		return false;
+
+	sToken awaitToken;
+	GetToken(&awaitToken);
+	if (!IdentifierIs(awaitToken, AWAIT_TOKEN))
+	{
+		RewindTo(&awaitToken);
+		return false;
+	}
+
+	if (isParsingAsyncFunction)
+	{
+		RewindTo(&awaitToken);
+		return true;
+	}
+
+	sToken operandToken;
+	GetToken(&operandToken);
+	const bool looksLikeAwait = operandToken.type == ttIdentifier
+		|| operandToken.type == ttScope
+		|| operandToken.type == ttCast
+		|| IsRealType(operandToken.type)
+		|| IsConstant(operandToken.type);
+	RewindTo(&awaitToken);
+	return looksLikeAwait;
 }
 //@CYANCOOK(AngelScript Async Await) END
 

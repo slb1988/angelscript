@@ -150,6 +150,7 @@ protected:
 	bool IsFuncDecl(bool isMethod);
 	//@CYANCOOK(AngelScript Async Await) BEGIN
 	bool IsAsyncFunctionModifier();
+	bool IsAwaitExpression();
 	//@CYANCOOK(AngelScript Async Await) END
 	bool IsLambda();
 	bool IsFunctionCall();

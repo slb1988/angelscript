@@ -4915,6 +4915,43 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 			ns = engine->nameSpaces[0];
 	}
 
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	if (funcTraits.GetTrait(asTRAIT_ASYNC))
+	{
+		if (objType == nullptr || isGlobalFunction)
+			WriteError("Async functions must be instance class methods", file, node);
+		if (funcTraits.GetTrait(asTRAIT_CONSTRUCTOR) || funcTraits.GetTrait(asTRAIT_DESTRUCTOR))
+			WriteError("Async constructors and destructors are not supported", file, node);
+		if (isInterface || isMixin || funcTraits.GetTrait(asTRAIT_MIXIN)
+			|| funcTraits.GetTrait(asTRAIT_OVERRIDE))
+			WriteError("Async interface, mixin, and override methods are not supported", file, node);
+		if (funcTraits.GetTrait(asTRAIT_PROPERTY))
+			WriteError("Async property accessors are not supported", file, node);
+		if (funcTraits.GetTrait(asTRAIT_ALLOWDISCARD))
+			WriteError("Async task results cannot be marked allow_discard; use Forget() explicitly", file, node);
+		if (returnType.IsReference())
+			WriteError("Async functions cannot return references", file, node);
+
+		asCTypeInfo* returnTypeInfo = returnType.GetTypeInfo();
+		const bool returnsTask = returnTypeInfo != nullptr
+			&& (returnTypeInfo->name == "FTask"
+				|| returnTypeInfo->name == "TTask"
+				|| returnTypeInfo->name.StartsWith("TTask<"));
+		if (!returnsTask)
+			WriteError("Async functions must return FTask or TTask<T>", file, node);
+
+		for (asUINT parameterIndex = 0; parameterIndex < parameterTypes.GetLength(); ++parameterIndex)
+		{
+			if (parameterTypes[parameterIndex].IsReference()
+				|| (parameterIndex < inOutFlags.GetLength() && inOutFlags[parameterIndex] != asTM_NONE))
+			{
+				WriteError("Async functions cannot have in, out, or reference parameters", file, node);
+				break;
+			}
+		}
+	}
+	//@CYANCOOK(AngelScript Async Await) END
+
 	if( isExistingShared )
 	{
 		asASSERT( objType );
