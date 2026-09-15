@@ -205,6 +205,7 @@ protected:
 	bool isParsingAppInterface;
 	//@CYANCOOK(AngelScript Async Await) BEGIN
 	bool isParsingAsyncFunction;
+	bool isParsingFunctionBody;
 	//@CYANCOOK(AngelScript Async Await) END
 
 	asCScriptEngine *engine;

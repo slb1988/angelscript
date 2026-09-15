@@ -4942,8 +4942,8 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 
 		for (asUINT parameterIndex = 0; parameterIndex < parameterTypes.GetLength(); ++parameterIndex)
 		{
-			if (parameterTypes[parameterIndex].IsReference()
-				|| (parameterIndex < inOutFlags.GetLength() && inOutFlags[parameterIndex] != asTM_NONE))
+			if (parameterIndex < inOutFlags.GetLength()
+				&& inOutFlags[parameterIndex] != asTM_NONE)
 			{
 				WriteError("Async functions cannot have in, out, or reference parameters", file, node);
 				break;

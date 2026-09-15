@@ -72,6 +72,7 @@ asCParser::asCParser(asCBuilder *builder)
 	isParsingAppInterface = false;
 	//@CYANCOOK(AngelScript Async Await) BEGIN
 	isParsingAsyncFunction = false;
+	isParsingFunctionBody = false;
 	//@CYANCOOK(AngelScript Async Await) END
 }
 
@@ -88,6 +89,7 @@ void asCParser::Reset()
 	isParsingAppInterface = false;
 	//@CYANCOOK(AngelScript Async Await) BEGIN
 	isParsingAsyncFunction = false;
+	isParsingFunctionBody = false;
 	//@CYANCOOK(AngelScript Async Await) END
 
 	sourcePos = 0;
@@ -2638,6 +2640,7 @@ int asCParser::ParseStatementBlock(
 	Reset();
 	//@CYANCOOK(AngelScript Async Await) BEGIN
 	isParsingAsyncFunction = in_isAsyncFunction;
+	isParsingFunctionBody = true;
 	//@CYANCOOK(AngelScript Async Await) END
 
 	// Tell the parser to validate the identifiers as valid types
@@ -3022,6 +3025,14 @@ bool asCParser::IsVarDecl()
 	sToken t;
 	GetToken(&t);
 	RewindTo(&t);
+
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+	if (isParsingFunctionBody && IsAwaitExpression())
+	{
+		RewindTo(&t);
+		return false;
+	}
+	//@CYANCOOK(AngelScript Async Await) END
 
 	// A class property decl can be preceded by 'private' or 'protected'
 	sToken t1;
