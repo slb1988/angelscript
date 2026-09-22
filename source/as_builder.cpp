@@ -4637,12 +4637,14 @@ void asCBuilder::GetParsedFunctionDetails(asCScriptNode *node, asCScriptCode *fi
 	}
 
 	//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 	funcTraits.SetTrait(asTRAIT_ASYNC, false);
 	if (node->nodeType == snAsync)
 	{
 		funcTraits.SetTrait(asTRAIT_ASYNC, true);
 		node = node->next;
 	}
+#endif
 	//@CYANCOOK(AngelScript Async Await) END
 
 	// Find the name
@@ -4690,7 +4692,11 @@ void asCBuilder::GetParsedFunctionDetails(asCScriptNode *node, asCScriptCode *fi
 	funcTraits.SetTrait(asTRAIT_OVERRIDE, false);
 	funcTraits.SetTrait(asTRAIT_PROPERTY, false);
 	//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 	funcTraits.SetTrait(asTRAIT_NODISCARD, funcTraits.GetTrait(asTRAIT_ASYNC));
+#else
+	funcTraits.SetTrait(asTRAIT_NODISCARD, false);
+#endif
 	//@CYANCOOK(AngelScript Async Await) END
 	funcTraits.SetTrait(asTRAIT_ALLOWDISCARD, false);
 
@@ -4916,6 +4922,7 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 	}
 
 	//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 	if (funcTraits.GetTrait(asTRAIT_ASYNC))
 	{
 		if (objType == nullptr || isGlobalFunction)
@@ -4961,6 +4968,7 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 		if (hasExplicitReferenceParameter)
 			WriteError("Async functions cannot have in, out, or reference parameters", file, node);
 	}
+#endif
 	//@CYANCOOK(AngelScript Async Await) END
 
 	if( isExistingShared )

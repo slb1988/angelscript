@@ -528,7 +528,9 @@ public:
 		bool   floatIsFloat64;
 		bool   warnOnFloatConstantsForDoubles;
 		bool   warnIntegerDivision;
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 		bool   enableAsyncAwait;
+#endif
 	} ep;
 
 	// Callbacks

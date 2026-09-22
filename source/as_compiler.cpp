@@ -1140,8 +1140,12 @@ int asCCompiler::CompileFunction(asCBuilder *in_builder, asCScriptCode *in_scrip
 	{
 		asCParser parser(builder);
 		//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 		int r = parser.ParseStatementBlock(
 			script, blockBegin, in_outFunc->traits.GetTrait(asTRAIT_ASYNC));
+#else
+		int r = parser.ParseStatementBlock(script, blockBegin);
+#endif
 		//@CYANCOOK(AngelScript Async Await) END
 		if (r < 0) return -1;
 		asCScriptNode* block = parser.GetScriptNode();
@@ -11293,6 +11297,7 @@ int asCCompiler::CompileExpressionTerm(asCScriptNode *node, asCExprContext *ctx,
 	while( pnode )
 	{
 		//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 		if (pnode->nodeType == snAwait)
 		{
 			if (!outFunc->traits.GetTrait(asTRAIT_ASYNC))
@@ -11315,6 +11320,7 @@ int asCCompiler::CompileExpressionTerm(asCScriptNode *node, asCExprContext *ctx,
 			Error("Async function reached bytecode compilation before state-machine lowering", pnode);
 			return -1;
 		}
+#endif
 		//@CYANCOOK(AngelScript Async Await) END
 		r = CompileExpressionPreOp(pnode, &v, bIsStatementRoot); if( r < 0 ) return r;
 		pnode = pnode->prev;

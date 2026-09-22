@@ -343,8 +343,10 @@ const char * const DEPRECATED_TOKEN     = "deprecated";
 const char * const UNSAFE_DURING_CONSTRUCTION_TOKEN     = "unsafe_during_construction";
 const char * const DEFAULTS_TOKEN     = "defaults";
 //@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 const char * const ASYNC_TOKEN = "async";
 const char * const AWAIT_TOKEN = "await";
+#endif
 //@CYANCOOK(AngelScript Async Await) END
 
 END_AS_NAMESPACE

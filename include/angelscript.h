@@ -39,6 +39,10 @@
 #ifndef ANGELSCRIPT_H
 #define ANGELSCRIPT_H
 
+//@CYANCOOK(Async Compile Gate) BEGIN
+#include "as_async_feature.h"
+//@CYANCOOK(Async Compile Gate) END
+
 #include "CoreMinimal.h"
 #include "UObject/Class.h"
 #include "UObject/Object.h"
@@ -154,8 +158,12 @@ enum asEEngineProp
 	asEP_WARN_ON_FLOAT_CONSTANTS_FOR_DOUBLES  = 33,
 	asEP_WARN_INTEGER_DIVISION  = 34,
 	asEP_RETURN_LINE_INFO            = 35,
+	//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 	// 36-47 are reserved for properties introduced by upstream 2.38.
 	asEP_ENABLE_ASYNC_AWAIT          = 48,
+#endif
+	//@CYANCOOK(AngelScript Async Await) END
 
 	asEP_LAST_PROPERTY
 };

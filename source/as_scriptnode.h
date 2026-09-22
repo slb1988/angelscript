@@ -98,8 +98,10 @@ enum eScriptNode
 	snFallthrough,
 	snForRange,
 	//@CYANCOOK(AngelScript Async Await) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
 	snAsync,
 	snAwait,
+#endif
 	//@CYANCOOK(AngelScript Async Await) END
 };
 
