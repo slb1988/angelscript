@@ -123,6 +123,18 @@ asCBuilder::~asCBuilder()
 		scripts[n] = 0;
 	}
 
+	//@CYANCOOK(Async Generated Script Ownership) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
+	for( n = 0; n < generatedScripts.GetLength(); n++ )
+	{
+		if( generatedScripts[n] )
+			asDELETE(generatedScripts[n],asCScriptCode);
+
+		generatedScripts[n] = 0;
+	}
+#endif
+	//@CYANCOOK(Async Generated Script Ownership) END
+
 	// Free all class declarations
 	for( n = 0; n < classDeclarations.GetLength(); n++ )
 	{

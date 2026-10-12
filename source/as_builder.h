@@ -305,6 +305,14 @@ public:
 	asCArray<sMixinClass *>                    mixinClasses;
 	asCArray<class asCParser*>                 parsers;
 
+	//@CYANCOOK(Async Generated Script Ownership) BEGIN
+#if WITH_ANGELSCRIPT_ASYNC_AWAIT
+	// Scripts synthesized after parsing (async lowering). Owned by the builder, but kept out of
+	// `scripts`, which must stay index-aligned with `parsers` for BuildGenerateTypes re-entry.
+	asCArray<asCScriptCode *>                  generatedScripts;
+#endif
+	//@CYANCOOK(Async Generated Script Ownership) END
+
 #if WITH_EDITOR
 	// Each editor-only code block has its start and end line recorded here for error checking
 	TArray<TPair<size_t,size_t>> EditorOnlyBlockCharacterPositions;
