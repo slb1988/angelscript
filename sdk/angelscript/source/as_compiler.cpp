@@ -5345,6 +5345,9 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 	if (DeclareVariable("", rangeDt, rangeOffset, &rangeExpr.bc, node) < 0)
 		return;
 
+	// If the range object is stored as a handle then it is necessary to dereference the pointer, otherwise use the variable pointer directly
+	asEBCInstr rangeLoadInstruction = rangeDt.IsObjectHandle() ? asBC_PshVPtr : asBC_PSF;
+
 	CompileInitializationWithAssignment(&rangeExpr.bc, rangeDt, rangeNode, rangeOffset, 0, asVGM_VARIABLE, rangeNode, &rangeExpr);
 	ProcessDeferredParams(&rangeExpr);
 	rangeExpr.bc.OptimizeLocally(tempVariableOffsets);
@@ -5545,7 +5548,7 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 
 	asCExprContext opForBeginExpr(engine);
 	{
-		opForBeginExpr.bc.InstrSHORT(asBC_PshVPtr, short(rangeOffset));
+		opForBeginExpr.bc.InstrSHORT(rangeLoadInstruction, short(rangeOffset));
 
 		asCArray<asCExprContext*> args;
 		int r = MakeFunctionCall(
@@ -5567,7 +5570,7 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 	// Compile the condition statement
 	asCExprContext opForEndExpr(engine);
 	{
-		opForEndExpr.bc.InstrSHORT(asBC_PshVPtr, short(rangeOffset));
+		opForEndExpr.bc.InstrSHORT(rangeLoadInstruction, short(rangeOffset));
 
 		asCArray<asCExprContext*> args;
 		asCExprContext arg(engine);
@@ -5614,7 +5617,7 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 	asCExprContext next(engine);
 	{
 		asCExprContext opForNextExpr(engine);
-		opForNextExpr.bc.InstrSHORT(asBC_PshVPtr, short(rangeOffset));
+		opForNextExpr.bc.InstrSHORT(rangeLoadInstruction, short(rangeOffset));
 
 		asCArray<asCExprContext*> args;
 		asCExprContext arg(engine);
@@ -5674,6 +5677,10 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 	bool hasReturn;
 	asCByteCode foreachBC(engine);
 
+	// Add a variable scope for the internal variables so they are deallocated on break statements
+	foreachBC.Block(true);
+	AddVariableScope();
+
 	asCArray<int> itemOffsets;
 	for (asUINT i = 0; i < itemCount; ++i)
 	{
@@ -5691,7 +5698,7 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 
 		asCExprContext opForValueNExpr(engine);
 
-		opForValueNExpr.bc.InstrSHORT(asBC_PshVPtr, short(rangeOffset));
+		opForValueNExpr.bc.InstrSHORT(rangeLoadInstruction, short(rangeOffset));
 
 		asCArray<asCExprContext*> args;
 		asCExprContext arg(engine);
@@ -5735,10 +5742,11 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 		int itemOffset = itemOffsets[i - 1];
 		asCDataType& itemDt = itemDataTypes[i - 1];
 		CallDestructor(itemDt, itemOffset, IsVariableOnHeap(itemOffset), &foreachBC);
-
-		// No need to deallocate here,
-		// we'll deallocate them after the loop is done
+		DeallocateVariable(itemOffset);
 	}
+
+	RemoveVariableScope();
+	foreachBC.Block(false);
 
 	//-------------------------------
 	// Join the code pieces
@@ -5774,8 +5782,7 @@ void asCCompiler::CompileForEachStatement(asCScriptNode* node, asCByteCode* bc)
 
 		// Call variable destructors here, for variables not yet destroyed
 		// The items (values) were already destroyed as part of the loop statement, so don't destroy them again outside the loop
-		if( !itemOffsets.Exists(v->stackOffset) )
-			CallDestructor(v->type, v->stackOffset, v->onHeap, bc);
+		CallDestructor(v->type, v->stackOffset, v->onHeap, bc);
 		DeallocateVariable(v->stackOffset);
 	}
 
@@ -6133,6 +6140,9 @@ void asCCompiler::CompileReturnStatement(asCScriptNode *rnode, asCByteCode *bc)
 		int r = CompileAssignment(rnode->firstChild, &expr);
 		if( r < 0 ) return;
 
+		if( ProcessPropertyGetAccessor(&expr, rnode) < 0 )
+			return;
+
 		if( v->type.IsReference() )
 		{
 			// The expression that gives the reference must not use any of the
@@ -6246,9 +6256,6 @@ void asCCompiler::CompileReturnStatement(asCScriptNode *rnode, asCByteCode *bc)
 		}
 		else // if( !v->type.IsReference() )
 		{
-			if( ProcessPropertyGetAccessor(&expr, rnode) < 0 )
-				return;
-
 			// Prepare the value for assignment
 			IsVariableInitialized(&expr.type, rnode->firstChild);
 
@@ -13137,8 +13144,10 @@ int asCCompiler::InstantiateTemplateFunctions(asCArray<int>& funcs, asCScriptNod
 		asUINT numTypes = func->templateSubTypes.GetLength();
 		// TODO: If types for template instance has been given in the node, and no matching template function exists then an error must be given
 		if (numTypes == 0) continue;
-		asCArray<asCDataType> dataTypes;
+		
 		// TODO: If there is more than one template function with the same name, then use only the one that matches
+		types = startNode;
+		asCArray<asCDataType> dataTypes;
 		for (asUINT j = 0; j < numTypes; j++)
 		{
 			// If the number of types doesn't match the template then give an error 
@@ -13152,6 +13161,7 @@ int asCCompiler::InstantiateTemplateFunctions(asCArray<int>& funcs, asCScriptNod
 			dataTypes.PushLast(builder->CreateDataTypeFromNode(types, script, func->nameSpace, func->objectType, 0, true, 0, 0, &m_namespaceVisibility));
 			types = types->next;
 		}
+		
 		// Check that there isn't additional types
 		if (types == 0 || types->nodeType != snArgList)
 		{

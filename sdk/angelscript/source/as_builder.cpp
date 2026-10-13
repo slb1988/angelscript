@@ -87,7 +87,9 @@ asCBuilder::asCBuilder(asCScriptEngine *_engine, asCModule *_module)
 	silent = false;
 	numWarnings = 0;
 	numErrors = 0;
+#ifndef AS_NO_COMPILER
 	hasCachedKnownTypes = false;
+#endif
 }
 
 asCBuilder::~asCBuilder()
@@ -6402,7 +6404,7 @@ asSNameSpace *asCBuilder::GetNameSpaceByString(const asCString &nsName, asSNameS
 
 					asSNameSpace *nsTmp = searchNs == "::" ? engine->nameSpaces[0] : engine->FindNameSpace(searchNs.AddressOf());
 					asCTypeInfo *ti = 0;
-					while( !ti && nsTmp )
+					if( nsTmp )
 					{
 						// Check if the typeName is an existing type in the namespace
 						ti = GetType(typeName.AddressOf(), nsTmp, 0);
@@ -6412,7 +6414,6 @@ asSNameSpace *asCBuilder::GetNameSpaceByString(const asCString &nsName, asSNameS
 							*scopeType = ti;
 							return 0;
 						}
-						nsTmp = recursive ? engine->GetParentNameSpace(nsTmp) : 0;
 					}
 				}
 			}
