@@ -67,38 +67,6 @@ static void ScriptFunction_Release_Generic(asIScriptGeneric *gen)
 	self->Release();
 }
 
-static void ScriptFunction_GetRefCount_Generic(asIScriptGeneric *gen)
-{
-	asCScriptFunction *self = (asCScriptFunction*)gen->GetObject();
-	*(int*)gen->GetAddressOfReturnLocation() = self->GetRefCount();
-}
-
-static void ScriptFunction_SetFlag_Generic(asIScriptGeneric *gen)
-{
-	asCScriptFunction *self = (asCScriptFunction*)gen->GetObject();
-	self->SetFlag();
-}
-
-static void ScriptFunction_GetFlag_Generic(asIScriptGeneric *gen)
-{
-	asCScriptFunction *self = (asCScriptFunction*)gen->GetObject();
-	*(bool*)gen->GetAddressOfReturnLocation() = self->GetFlag();
-}
-
-static void ScriptFunction_EnumReferences_Generic(asIScriptGeneric *gen)
-{
-	asCScriptFunction *self = (asCScriptFunction*)gen->GetObject();
-	asIScriptEngine *engine = *(asIScriptEngine**)gen->GetAddressOfArg(0);
-	self->EnumReferences(engine);
-}
-
-static void ScriptFunction_ReleaseAllHandles_Generic(asIScriptGeneric *gen)
-{
-	asCScriptFunction *self = (asCScriptFunction*)gen->GetObject();
-	asIScriptEngine *engine = *(asIScriptEngine**)gen->GetAddressOfArg(0);
-	self->ReleaseAllHandles(engine);
-}
-
 static void ScriptFunction_CreateDelegate_Generic(asIScriptGeneric *gen)
 {
 	asCScriptFunction *func = (asCScriptFunction*)gen->GetArgAddress(0);
@@ -120,33 +88,16 @@ static void ScriptFunction_CreateDelegate_Generic(asIScriptGeneric *gen)
 
 void RegisterScriptFunction(asCScriptEngine *engine)
 {
-	// Register the gc behaviours for the script functions
+	// Function metadata retains reference counting, but the UE fork has no
+	// upstream GC type flag (asOBJ_GC == 0). Registering GC behaviours here
+	// would fail validation and poison every new engine's configuration.
 	int r = 0;
 	UNUSED_VAR(r); // It is only used in debug mode
 	engine->functionBehaviours.engine = engine;
-	engine->functionBehaviours.flags = asOBJ_REF | asOBJ_GC;
+	engine->functionBehaviours.flags = asOBJ_REF;
 	engine->functionBehaviours.name = "$func";
-//#ifndef AS_MAX_PORTABILITY
-#if 0
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_ADDREF, "void f()", asMETHOD(asCScriptFunction,AddRef), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_RELEASE, "void f()", asMETHOD(asCScriptFunction,Release), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_GETREFCOUNT, "int f()", asMETHOD(asCScriptFunction,GetRefCount), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_SETGCFLAG, "void f()", asMETHOD(asCScriptFunction,SetFlag), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_GETGCFLAG, "bool f()", asMETHOD(asCScriptFunction,GetFlag), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_ENUMREFS, "void f(int&in)", asMETHOD(asCScriptFunction,EnumReferences), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_RELEASEREFS, "void f(int&in)", asMETHOD(asCScriptFunction,ReleaseAllHandles), asCALL_THISCALL, nullptr, 0); asASSERT( r >= 0 );
-	// TODO: Need some way to allow the arg type to adapt when the funcdefs are instantiated
-//	r = engine->RegisterMethodToObjectType(&engine->functionBehaviours, "bool opEquals(const int &in)", asMETHOD(asCScriptFunction,operator==), asCALL_THISCALL); asASSERT( r >= 0 );
-#else
 	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_ADDREF, "void f()", asFUNCTION(ScriptFunction_AddRef_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
 	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_RELEASE, "void f()", asFUNCTION(ScriptFunction_Release_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_GETREFCOUNT, "int f()", asFUNCTION(ScriptFunction_GetRefCount_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_SETGCFLAG, "void f()", asFUNCTION(ScriptFunction_SetFlag_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_GETGCFLAG, "bool f()", asFUNCTION(ScriptFunction_GetFlag_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_ENUMREFS, "void f(int&in Ptr)", asFUNCTION(ScriptFunction_EnumReferences_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
-	r = engine->RegisterBehaviourToObjectType(&engine->functionBehaviours, asBEHAVE_RELEASEREFS, "void f(int&in Ptr)", asFUNCTION(ScriptFunction_ReleaseAllHandles_Generic), asCALL_GENERIC, nullptr, 0); asASSERT( r >= 0 );
-//	r = engine->RegisterMethodToObjectType(&engine->functionBehaviours, "bool opEquals(const int &in)", asFUNCTION(ScriptFunction_opEquals_Generic), asCALL_GENERIC); asASSERT( r >= 0 );
-#endif
 
 	// Register the builtin function for creating delegates
 	// This function returns a handle to the delegate, but since the type is not known at this time it is
