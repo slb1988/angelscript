@@ -1,0 +1,16 @@
+### Windows
+# Windows thumbnail cache files
+Thumbs.db
+
+# Folder config file
+[Dd]esktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows shortcuts
+*.lnk
+projects/vs2022/.vs
+projects/vs2022/x64
+projects/vs2022/angelscr.8F3E2A10
+*.user
