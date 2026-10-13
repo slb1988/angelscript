@@ -55,6 +55,8 @@ BEGIN_AS_NAMESPACE
 class asCScriptEngine;
 class asCScriptFunction;
 class asCByteInstruction;
+// NOTE(standalone-test): 本 fork 依赖 UE unity build 传递声明；独立编译需要显式前置声明
+class asCBuilder;
 
 class asCByteCode
 {

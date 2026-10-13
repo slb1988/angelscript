@@ -293,5 +293,78 @@ int asStringEncodeUTF16(unsigned int value, char *outEncodedBuffer)
 	}
 }
 
+// NOTE(standalone-test): 本 fork 的头文件声明了单参数版本 asStringScanDouble，
+// 但实现只在 UE 集成层提供；独立测试构建在此补上（移植自上游 2.33 实现，
+// 去掉 numScanned 出参）。
+double asStringScanDouble(const char *string)
+{
+	double value = 0;
+	double fraction = 0.1;
+	int exponent = 0;
+	bool negativeExponent = false;
+	int c = 0;
+
+	// Parse the integer value
+	for( ;; )
+	{
+		if( string[c] >= '0' && string[c] <= '9' )
+			value = value*10 + double(string[c] - '0');
+		else
+			break;
+
+		c++;
+	}
+
+	if( string[c] == '.' )
+	{
+		c++;
+
+		// Parse the fraction
+		for( ;; )
+		{
+			if( string[c] >= '0' && string[c] <= '9' )
+				value += fraction * double(string[c] - '0');
+			else
+				break;
+
+			c++;
+			fraction *= 0.1;
+		}
+	}
+
+	if( string[c] == 'e' || string[c] == 'E' )
+	{
+		c++;
+
+		// Parse the sign of the exponent
+		if( string[c] == '-' )
+		{
+			negativeExponent = true;
+			c++;
+		}
+		else if( string[c] == '+' )
+			c++;
+
+		// Parse the exponent value
+		for( ;; )
+		{
+			if( string[c] >= '0' && string[c] <= '9' )
+				exponent = exponent*10 + int(string[c] - '0');
+			else
+				break;
+
+			c++;
+		}
+	}
+
+	if( exponent )
+	{
+		if( negativeExponent )
+			exponent = -exponent;
+		value *= pow(10.0, exponent);
+	}
+
+	return value;
+}
 
 END_AS_NAMESPACE

@@ -42,6 +42,9 @@
 #include "as_context.h"
 #include "as_texts.h"
 #include "as_debug.h"
+// NOTE(standalone-test): ScriptObjectDefaultConstructor 声明在此头中，
+// 原仓库依赖 UE unity build 传递包含；独立编译必须显式包含。
+#include "as_scriptobject.h"
 
 BEGIN_AS_NAMESPACE
 
@@ -287,9 +290,24 @@ int asCModule::Build()
 	}
 
 	// Compile the script
+#ifdef AS_STANDALONE_BUILD_DRIVER
+	// NOTE(standalone-test): 本 fork 把构建拆成了分段 API（见 as_builder.h 注释，
+	// 在 UE 中由插件层跨模块驱动）。独立测试工程定义 AS_STANDALONE_BUILD_DRIVER，
+	// 在 Build() 内按序执行全部三个阶段。
+	if( r >= 0 ) r = builder->BuildParallelParseScripts();
+	if( r >= 0 ) r = builder->BuildGenerateTypes();
+	if( r >= 0 ) r = builder->BuildLayoutClasses();
+	if( r >= 0 ) builder->BuildAllocateGlobalVariables();
+	if( r >= 0 ) r = builder->BuildLayoutFunctions();
+	if( r >= 0 ) r = builder->BuildGenerateFunctions();
+	if( r >= 0 ) r = builder->BuildCompileCode();
+	asDELETE(builder,asCBuilder);
+	builder = 0;
+#else
 	//r = builder->Build();
 	asDELETE(builder,asCBuilder);
 	builder = 0;
+#endif
 
 	if( r < 0 )
 	{
@@ -2114,7 +2132,7 @@ void asCModule::DiffForReferenceUpdate(asCModule* OldModule, asModuleReferenceUp
 				}
 
 				builder->AddDefaultDestructor(NewClass, classDecl->script);
-				check(NewClass->beh.destruct != 0)
+				check(NewClass->beh.destruct != 0); // NOTE(standalone-test): 原代码缺分号
 			}
 
 			asCScriptFunction* OldFunction = engine->scriptFunctions[OldClass->beh.destruct];

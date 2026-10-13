@@ -42,6 +42,9 @@
 #ifndef AS_NO_COMPILER
 
 #include "as_bytecode.h"
+// NOTE(standalone-test): as_bytecode.cpp 的构造函数使用 asCBuilder*，原仓库依赖
+// UE unity build 传递包含 as_builder.h；独立编译必须显式包含。
+#include "as_builder.h"
 #include "as_debug.h" // mkdir()
 #include "as_array.h"
 #include "as_string.h"
