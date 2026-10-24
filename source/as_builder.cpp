@@ -4937,8 +4937,8 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 #if WITH_ANGELSCRIPT_ASYNC_AWAIT
 	if (funcTraits.GetTrait(asTRAIT_ASYNC))
 	{
-		if (objType == nullptr || isGlobalFunction)
-			WriteError("Async functions must be instance class methods", file, node);
+		// Free (namespace-scope) async functions are supported: they lower to a
+		// receiverless state machine owned by the ambient execution scope.
 		if (funcTraits.GetTrait(asTRAIT_CONSTRUCTOR) || funcTraits.GetTrait(asTRAIT_DESTRUCTOR))
 			WriteError("Async constructors and destructors are not supported", file, node);
 		if (isInterface || isMixin || funcTraits.GetTrait(asTRAIT_MIXIN)
